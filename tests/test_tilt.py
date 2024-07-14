@@ -98,7 +98,8 @@ class TestTiltMutations(unittest.TestCase):
       self.assertEqual(stroke.scale, 1.25)
       # Test removing extension data
       del stroke.flags
-      self.assertRaises(AttributeError (lambda: stroke.flags))
+      with self.assertRaises(AttributeError):
+        lambda: stroke.flags
       # Test that the changes survive a save+load
       tilt.write_sketch()
       stroke2 = Tilt(tilt.filename).sketch.strokes[0]
