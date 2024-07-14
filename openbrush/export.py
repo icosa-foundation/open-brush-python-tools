@@ -44,7 +44,8 @@ def _grouper(n, iterable, fillvalue=None):
 
 def iter_meshes(filename):
     """Given a Tilt Brush .json export, yields TiltBrushMesh instances."""
-    obj = json.load(file(filename, 'rb'))
+    with open(filename, 'rb') as f:
+        obj = json.load(f)
     lookup = obj['brushes']
     for dct in lookup:
         dct['guid'] = UUID(dct['guid'])

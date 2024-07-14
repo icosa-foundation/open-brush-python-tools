@@ -100,7 +100,7 @@ def write_obj(mesh, outf_name, use_color):
             tmpf.write("f %d %d %d\n" % (t1, t2, t3))
 
     with open(outf_name, 'wb') as outf:
-        outf.write(tmpf.getvalue())
+        outf.write(tmpf.getvalue().encode('utf-8'))
 
 
 def main():

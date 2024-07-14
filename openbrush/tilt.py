@@ -20,7 +20,7 @@ import math
 import os
 import struct
 import uuid
-from io import StringIO
+from io import BytesIO
 
 __all__ = ('Tilt', 'Sketch', 'Stroke', 'ControlPoint',
            'BadTilt', 'BadMetadata', 'MissingKey')
@@ -365,7 +365,7 @@ class Sketch(object):
 
     def write(self, destination):
         """destination is either a file name, a file-like instance, or a Tilt instance."""
-        tmpf = StringIO()
+        tmpf = BytesIO()
         self._write(binfile(tmpf))
         data = tmpf.getvalue()
 
@@ -488,7 +488,7 @@ class Stroke(object):
     @memoized_property
     def controlpoints(self):
         (cp_ext_reader, num_cp, raw_data) = self.__dict__.pop('_controlpoints')
-        b = binfile(StringIO(raw_data))
+        b = binfile(BytesIO(raw_data))
         return [ControlPoint.from_file(b, cp_ext_reader) for i in range(num_cp)]
 
     def has_stroke_extension(self, name):
