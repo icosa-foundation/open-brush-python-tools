@@ -99,7 +99,7 @@ def write_obj(mesh, outf_name, use_color):
             t3 += 1
             tmpf.write("f %d %d %d\n" % (t1, t2, t3))
 
-    with file(outf_name, 'wb') as outf:
+    with open(outf_name, 'wb') as outf:
         outf.write(tmpf.getvalue())
 
 

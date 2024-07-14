@@ -90,7 +90,7 @@ def _read_and_check_header(inf):
 
 def convert_zip_to_dir(in_name):
     """Returns True if compression was used"""
-    with file(in_name, 'rb') as inf:
+    with open(in_name, 'rb') as inf:
         header_bytes = _read_and_check_header(inf)
 
     compression = False
@@ -106,7 +106,7 @@ def convert_zip_to_dir(in_name):
                 if member.compress_size != member.file_size:
                     compression = True
                 zf.extract(member, out_name)
-        with file(os.path.join(out_name, 'header.bin'), 'wb') as outf:
+        with open(os.path.join(out_name, 'header.bin'), 'wb') as outf:
             outf.write(header_bytes)
 
         tmp = in_name + '._prev'
@@ -136,7 +136,7 @@ def convert_dir_to_zip(in_name, compress):
     # Make sure metadata.json looks like valid utf-8 (rather than latin-1
     # or something else that will cause mojibake)
     try:
-        with file(os.path.join(in_name, 'metadata.json')) as inf:
+        with open(os.path.join(in_name, 'metadata.json')) as inf:
             import json
             json.load(inf)
     except IOError as e:
@@ -169,7 +169,7 @@ def convert_dir_to_zip(in_name, compress):
         if not _read_and_check_header(StringIO(header_bytes)):
             raise ConversionError("Invalid header.bin")
 
-        with file(out_name, 'wb') as outf:
+        with open(out_name, 'wb') as outf:
             outf.write(header_bytes)
             outf.write(zipf.getvalue())
 

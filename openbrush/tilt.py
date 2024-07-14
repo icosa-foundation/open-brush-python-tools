@@ -232,7 +232,7 @@ class Tilt(object):
     @contextlib.contextmanager
     def subfile_reader(self, subfile):
         if os.path.isdir(self.filename):
-            with file(os.path.join(self.filename, subfile), 'rb') as inf:
+            with open(os.path.join(self.filename, subfile), 'rb') as inf:
                 yield inf
         else:
             from zipfile import ZipFile
@@ -244,7 +244,7 @@ class Tilt(object):
     def subfile_writer(self, subfile):
         # Kind of a large hammer, but it works
         if os.path.isdir(self.filename):
-            with file(os.path.join(self.filename, subfile), 'wb') as outf:
+            with open(os.path.join(self.filename, subfile), 'wb') as outf:
                 yield outf
         else:
             with Tilt.as_directory(self.filename) as tilt2:
@@ -360,7 +360,7 @@ class Sketch(object):
             self._parse(binfile(source))
         else:
             self.filename = source
-            with file(source, 'rb') as inf:
+            with open(source, 'rb') as inf:
                 self._parse(binfile(inf))
 
     def write(self, destination):
@@ -375,7 +375,7 @@ class Sketch(object):
         elif hasattr(destination, 'write'):
             destination.write(data)
         else:
-            with file(destination, 'wb') as outf:
+            with open(destination, 'wb') as outf:
                 outf.write(data)
 
     def _parse(self, b):
