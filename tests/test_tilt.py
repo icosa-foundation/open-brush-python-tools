@@ -34,7 +34,10 @@ def copy_of_tilt(tilt_file='data/sketch1.tilt', as_filename=False):
       yield Tilt(tmp_filename)
   finally:
     if os.path.exists(tmp_filename):
-      os.unlink(tmp_filename)
+      if os.path.isdir(tmp_filename):
+        shutil.rmtree(tmp_filename)
+      else:
+        os.unlink(tmp_filename)
 
 
 def as_float32(f):
