@@ -37,7 +37,7 @@ STROKE_EXTENSION_BITS = {
 }
 STROKE_EXTENSION_BY_NAME = dict(
     (info[0], (bit, info[1]))
-    for (bit, info) in STROKE_EXTENSION_BITS.items()
+    for (bit, info) in list(STROKE_EXTENSION_BITS.items())
     if bit != 'unknown'
 )
 
@@ -264,7 +264,7 @@ class Tilt(object):
             # Copy into self.metadata, preserving topmost reference
             for k in list(self.metadata.keys()):
                 del self.metadata[k]
-            for k, v in mutable_dct.items():
+            for k, v in list(mutable_dct.items()):
                 self.metadata[k] = copy.deepcopy(v)
 
             new_contents = json.dumps(
@@ -514,7 +514,7 @@ class Stroke(object):
         else:
             # Convert from idx->value to name->value
             name_to_value = dict((name, self.extension[idx])
-                                 for (name, idx) in self.stroke_ext_lookup.items())
+                                 for (name, idx) in list(self.stroke_ext_lookup.items()))
             name_to_value[name] = value
 
             bit, exttype = STROKE_EXTENSION_BY_NAME[name]
@@ -524,7 +524,7 @@ class Stroke(object):
 
             # Convert back to idx->value
             self.extension = [None] * len(self.stroke_ext_lookup)
-            for (name, idx) in self.stroke_ext_lookup.items():
+            for (name, idx) in list(self.stroke_ext_lookup.items()):
                 self.extension[idx] = name_to_value[name]
 
     def delete_stroke_extension(self, name):
@@ -534,7 +534,7 @@ class Stroke(object):
 
         # Convert from idx->value to name->value
         name_to_value = dict((name, self.extension[idx])
-                             for (name, idx) in self.stroke_ext_lookup.items())
+                             for (name, idx) in list(self.stroke_ext_lookup.items()))
         del name_to_value[name]
 
         bit, exttype = STROKE_EXTENSION_BY_NAME[name]
@@ -544,7 +544,7 @@ class Stroke(object):
 
         # Convert back to idx->value
         self.extension = [None] * len(self.stroke_ext_lookup)
-        for (name, idx) in self.stroke_ext_lookup.items():
+        for (name, idx) in list(self.stroke_ext_lookup.items()):
             self.extension[idx] = name_to_value[name]
 
     def has_cp_extension(self, name):
