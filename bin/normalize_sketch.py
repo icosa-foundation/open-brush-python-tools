@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This is sample Python 2.7 code that uses the tiltbrush.tilt module
+"""This is sample Python 2.7 code that uses the openbrush.tilt module
 to scale, rotate, and translate the sketch so that the resetting the
 transform will bring you back to the initial size, orientation, and
 position. But the environment size, orientation, and position will also
@@ -27,7 +27,7 @@ import sys
 try:
     sys.path.append(os.path.join(os.path.dirname(os.path.dirname(
         os.path.abspath(__file__))), 'Python'))
-    from tiltbrush.tilt import Tilt
+    from openbrush.tilt import Tilt
 except ImportError:
     print("Please put the 'Python' directory in your PYTHONPATH", file=sys.stderr)
     sys.exit(1)

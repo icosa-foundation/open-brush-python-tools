@@ -22,7 +22,7 @@ import xml.etree.ElementTree as ET
 try:
     sys.path.append(os.path.join(os.path.dirname(os.path.dirname(
         os.path.abspath(__file__))), 'Python'))
-    from tiltbrush.tilt import Tilt
+    from openbrush.tilt import Tilt
 except ImportError:
     print("Please put the 'Python' directory in your PYTHONPATH", file=sys.stderr)
     sys.exit(1)

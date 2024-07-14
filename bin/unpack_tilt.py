@@ -20,7 +20,7 @@ import sys
 try:
     sys.path.append(os.path.join(os.path.dirname(os.path.dirname(
         os.path.abspath(__file__))), 'Python'))
-    import tiltbrush.unpack
+    import openbrush.unpack
 except ImportError:
     print("Please put the 'Python' directory in your PYTHONPATH", file=sys.stderr)
     sys.exit(1)
@@ -28,13 +28,13 @@ except ImportError:
 
 def convert(in_name, compress):
     if os.path.isdir(in_name):
-        tiltbrush.unpack.convert_dir_to_zip(in_name, compress)
+        openbrush.unpack.convert_dir_to_zip(in_name, compress)
         print("Converted %s to zip format" % in_name)
     elif os.path.isfile(in_name):
-        tiltbrush.unpack.convert_zip_to_dir(in_name)
+        openbrush.unpack.convert_zip_to_dir(in_name)
         print("Converted %s to directory format" % in_name)
     else:
-        raise tiltbrush.unpack.ConversionError("%s doesn't exist" % in_name)
+        raise openbrush.unpack.ConversionError("%s doesn't exist" % in_name)
 
 
 def main():
@@ -49,7 +49,7 @@ def main():
     for arg in args.files:
         try:
             convert(arg, args.compress)
-        except tiltbrush.unpack.ConversionError as e:
+        except openbrush.unpack.ConversionError as e:
             print("ERROR: %s" % e)
 
 

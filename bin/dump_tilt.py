@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This is sample Python 2.7 code that uses the tiltbrush.tilt module
+"""This is sample Python 2.7 code that uses the openbrush.tilt module
 to view raw Tilt Brush data."""
 
 import os
@@ -24,7 +24,7 @@ import sys
 try:
     sys.path.append(os.path.join(os.path.dirname(os.path.dirname(
         os.path.abspath(__file__))), 'Python'))
-    from tiltbrush.tilt import Tilt
+    from openbrush.tilt import Tilt
 except ImportError:
     print("Please put the 'Python' directory in your PYTHONPATH", file=sys.stderr)
     sys.exit(1)
@@ -32,7 +32,7 @@ except ImportError:
 
 def dump_sketch(sketch):
     """Prints out some rough information about the strokes.
-    Pass a tiltbrush.tilt.Sketch instance."""
+    Pass a openbrush.tilt.Sketch instance."""
     cooky, version, unused = sketch.header[0:3]
     print('Cooky:0x%08x  Version:%s  Unused:%s  Extra:(%d bytes)' % (
         cooky, version, unused, len(sketch.additional_header)))

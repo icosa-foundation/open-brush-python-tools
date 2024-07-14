@@ -185,7 +185,7 @@ class Tilt(object):
         if os.path.isdir(tilt_file):
             yield Tilt(tilt_file)
         else:
-            import tiltbrush.unpack as unpack
+            import openbrush.unpack as unpack
             compressed = unpack.convert_zip_to_dir(tilt_file)
             try:
                 yield Tilt(tilt_file)

@@ -32,7 +32,7 @@ from itertools import groupby
 try:
     sys.path.append(os.path.join(os.path.dirname(os.path.dirname(
         os.path.abspath(__file__))), 'Python'))
-    from tiltbrush.export import iter_meshes, TiltBrushMesh, SINGLE_SIDED_FLAT_BRUSH
+    from openbrush.export import iter_meshes, TiltBrushMesh, SINGLE_SIDED_FLAT_BRUSH
 except ImportError:
     print("Please put the 'Python' directory in your PYTHONPATH", file=sys.stderr)
     sys.exit(1)

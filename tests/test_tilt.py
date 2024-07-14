@@ -17,7 +17,7 @@ import os
 import shutil
 import unittest
 
-from tiltbrush.tilt import Tilt
+from openbrush.tilt import Tilt
 
 
 @contextlib.contextmanager
