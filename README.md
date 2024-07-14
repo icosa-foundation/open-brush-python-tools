@@ -4,6 +4,20 @@ A collection of Python scripts to allow you to interact with [Open Brush](https:
 
 This code was previously part of the Tilt Brush Toolkit and was originally written by Google.
 
+## Setup
+
+### Local clone / development
+```bash
+git clone ...
+pip install -e .
+```
+
+### PyPI package
+
+```bash
+pip install openbrush
+```
+
 ## Contents
 
 ### Command Line Tools
