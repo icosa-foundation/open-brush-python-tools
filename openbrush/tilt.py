@@ -1,11 +1,11 @@
 # Copyright 2016 Google Inc. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,35 +22,45 @@ import struct
 import uuid
 from io import StringIO
 
-__all__ = ('Tilt', 'Sketch', 'Stroke', 'ControlPoint',
-           'BadTilt', 'BadMetadata', 'MissingKey')
+__all__ = (
+    "Tilt",
+    "Sketch",
+    "Stroke",
+    "ControlPoint",
+    "BadTilt",
+    "BadMetadata",
+    "MissingKey",
+)
 
 # Format characters are as for struct.pack/unpack, with the addition of
 # '@' which is a 4-byte-length-prefixed data blob.
 STROKE_EXTENSION_BITS = {
-    0x1: ('flags', 'I'),
-    0x2: ('scale', 'f'),
-    0x4: ('group', 'I'),
-    0x8: ('seed', 'I'),
-    'unknown': lambda bit: ('stroke_ext_%d' % math.log(bit, 2),
-                            'I' if (bit & 0xffff) else '@')
+    0x1: ("flags", "I"),
+    0x2: ("scale", "f"),
+    0x4: ("group", "I"),
+    0x8: ("seed", "I"),
+    "unknown": lambda bit: (
+        "stroke_ext_%d" % math.log(bit, 2),
+        "I" if (bit & 0xFFFF) else "@",
+    ),
 }
 STROKE_EXTENSION_BY_NAME = dict(
     (info[0], (bit, info[1]))
     for (bit, info) in STROKE_EXTENSION_BITS.items()
-    if bit != 'unknown'
+    if bit != "unknown"
 )
 
 CONTROLPOINT_EXTENSION_BITS = {
-    0x1: ('pressure', 'f'),
-    0x2: ('timestamp', 'I'),
-    'unknown': lambda bit: ('cp_ext_%d' % math.log(bit, 2), 'I')
+    0x1: ("pressure", "f"),
+    0x2: ("timestamp", "I"),
+    "unknown": lambda bit: ("cp_ext_%d" % math.log(bit, 2), "I"),
 }
 
 
 #
 # Internal utils
 #
+
 
 class memoized_property(object):
     """Modeled after @property, but runs the getter exactly once"""
@@ -81,7 +91,7 @@ class binfile(object):
         return self.inf.write(data)
 
     def read_length_prefixed(self):
-        n, = self.unpack("<I")
+        (n,) = self.unpack("<I")
         return self.inf.read(n)
 
     def write_length_prefixed(self, data):
@@ -98,42 +108,45 @@ class binfile(object):
         return self.inf.write(data)
 
 
-class BadTilt(Exception): pass
+class BadTilt(Exception):
+    pass
 
 
-class BadMetadata(BadTilt): pass
+class BadMetadata(BadTilt):
+    pass
 
 
-class MissingKey(BadMetadata): pass
+class MissingKey(BadMetadata):
+    pass
 
 
 def validate_metadata(dct):
     def lookup(path_and_parent, key):
         (path, parent) = path_and_parent
-        child_path = '%s.%s' % (path, key)
+        child_path = "%s.%s" % (path, key)
         if key not in parent:
-            raise MissingKey('Missing %s' % child_path)
+            raise MissingKey("Missing %s" % child_path)
         return (child_path, parent[key])
 
     def check_string(path_and_val):
         (path, val) = path_and_val
         if not isinstance(val, str):
-            raise BadMetadata('Not string: %s' % path)
+            raise BadMetadata("Not string: %s" % path)
 
     def check_float(path_and_val):
         (path, val) = path_and_val
         if not isinstance(val, (float, int)):
-            raise BadMetadata('Not number: %s' % path)
+            raise BadMetadata("Not number: %s" % path)
 
     def check_array(path_and_val, desired_len=None, typecheck=None):
         (path, val) = path_and_val
         if not isinstance(val, (list, tuple)):
-            raise BadMetadata('Not array: %s' % path)
+            raise BadMetadata("Not array: %s" % path)
         if desired_len and len(val) != desired_len:
-            raise BadMetadata('Not length %d: %s' % (desired_len, path))
+            raise BadMetadata("Not length %d: %s" % (desired_len, path))
         if typecheck is not None:
             for i, child_val in enumerate(val):
-                child_path = '%s[%s]' % (path, i)
+                child_path = "%s[%s]" % (path, i)
                 typecheck((child_path, child_val))
 
     def check_guid(path_and_val):
@@ -141,34 +154,35 @@ def validate_metadata(dct):
         try:
             uuid.UUID(val)
         except Exception as e:
-            raise BadMetadata('Not UUID: %s %s' % (path, e))
+            raise BadMetadata("Not UUID: %s %s" % (path, e))
 
     def check_xform(pathval):
-        check_array(lookup(pathval, 'position'), 3, check_float)
-        check_array(lookup(pathval, 'orientation'), 4, check_float)
+        check_array(lookup(pathval, "position"), 3, check_float)
+        check_array(lookup(pathval, "orientation"), 4, check_float)
 
-    root = ('metadata', dct)
+    root = ("metadata", dct)
     try:
-        check_xform(lookup(root, 'ThumbnailCameraTransformInRoomSpace'))
+        check_xform(lookup(root, "ThumbnailCameraTransformInRoomSpace"))
     except MissingKey:
         pass
     try:
-        check_xform(lookup(root, 'SceneTransformInRoomSpace'))
+        check_xform(lookup(root, "SceneTransformInRoomSpace"))
     except MissingKey:
         pass
     try:
-        check_xform(lookup(root, 'CanvasTransformInSceneSpace'))
+        check_xform(lookup(root, "CanvasTransformInSceneSpace"))
     except MissingKey:
         pass
-    check_array(lookup(root, 'BrushIndex'), None, check_guid)
-    check_guid(lookup(root, 'EnvironmentPreset'))
-    if 'Authors' in dct:
-        check_array(lookup(root, 'Authors'), None, check_string)
+    check_array(lookup(root, "BrushIndex"), None, check_guid)
+    check_guid(lookup(root, "EnvironmentPreset"))
+    if "Authors" in dct:
+        check_array(lookup(root, "Authors"), None, check_string)
 
 
 #
 # External
 #
+
 
 class Tilt(object):
     """Class representing a .tilt file. Attributes:
@@ -186,6 +200,7 @@ class Tilt(object):
             yield Tilt(tilt_file)
         else:
             import openbrush.unpack as unpack
+
             compressed = unpack.convert_zip_to_dir(tilt_file)
             try:
                 yield Tilt(tilt_file)
@@ -196,7 +211,7 @@ class Tilt(object):
     def iter(directory):
         for r, ds, fs in os.walk(directory):
             for f in ds + fs:
-                if f.endswith('.tilt'):
+                if f.endswith(".tilt"):
                     try:
                         yield Tilt(os.path.join(r, f))
                     except BadTilt:
@@ -205,38 +220,47 @@ class Tilt(object):
     def __init__(self, filename):
         self.filename = filename
         self._sketch = None  # lazily-loaded
-        with self.subfile_reader('metadata.json') as inf:
+        with self.subfile_reader("metadata.json") as inf:
             self.metadata = json.load(inf)
             try:
                 validate_metadata(self.metadata)
             except BadMetadata as e:
-                print('WARNING: %s' % e)
+                print("WARNING: %s" % e)
 
     def write_sketch(self):
         if False:
             # Recreate BrushIndex. Not tested and not strictly necessary, so not enabled
-            old_index_to_brush = list(self.metadata['BrushIndex'])
+            old_index_to_brush = list(self.metadata["BrushIndex"])
             old_brushes = set(old_index_to_brush)
-            new_brushes = set(old_index_to_brush[s.brush_idx] for s in self.sketch.strokes)
+            new_brushes = set(
+                old_index_to_brush[s.brush_idx] for s in self.sketch.strokes
+            )
             if old_brushes != new_brushes:
                 new_index_to_brush = sorted(new_brushes)
-                brush_to_new_index = dict((b, i) for (i, b) in enumerate(new_index_to_brush))
-                old_index_to_new_index = list(map(brush_to_new_index.get, old_index_to_brush))
+                brush_to_new_index = dict(
+                    (b, i) for (i, b) in enumerate(new_index_to_brush)
+                )
+                old_index_to_new_index = list(
+                    map(brush_to_new_index.get, old_index_to_brush)
+                )
                 for stroke in self.sketch.strokes:
-                    stroke.brush_idx = brush_to_new_index[old_index_to_brush[stroke.brush_idx]]
+                    stroke.brush_idx = brush_to_new_index[
+                        old_index_to_brush[stroke.brush_idx]
+                    ]
                 with self.mutable_metadata() as dct:
-                    dct['BrushIndex'] = new_index_to_brush
+                    dct["BrushIndex"] = new_index_to_brush
 
         self.sketch.write(self)
 
     @contextlib.contextmanager
     def subfile_reader(self, subfile):
         if os.path.isdir(self.filename):
-            with file(os.path.join(self.filename, subfile), 'rb') as inf:
+            with file(os.path.join(self.filename, subfile), "rb") as inf:
                 yield inf
         else:
             from zipfile import ZipFile
-            with ZipFile(self.filename, 'r') as inzip:
+
+            with ZipFile(self.filename, "r") as inzip:
                 with inzip.open(subfile) as inf:
                     yield inf
 
@@ -244,7 +268,7 @@ class Tilt(object):
     def subfile_writer(self, subfile):
         # Kind of a large hammer, but it works
         if os.path.isdir(self.filename):
-            with file(os.path.join(self.filename, subfile), 'wb') as outf:
+            with file(os.path.join(self.filename, subfile), "wb") as outf:
                 yield outf
         else:
             with Tilt.as_directory(self.filename) as tilt2:
@@ -257,6 +281,7 @@ class Tilt(object):
         When the context manager exits, the updated metadata will
         validated and written to disk."""
         import copy
+
         mutable_dct = copy.deepcopy(self.metadata)
         yield mutable_dct
         validate_metadata(mutable_dct)
@@ -268,9 +293,14 @@ class Tilt(object):
                 self.metadata[k] = copy.deepcopy(v)
 
             new_contents = json.dumps(
-                mutable_dct, ensure_ascii=True, allow_nan=False,
-                indent=2, sort_keys=True, separators=(',', ': '))
-            with self.subfile_writer('metadata.json') as outf:
+                mutable_dct,
+                ensure_ascii=True,
+                allow_nan=False,
+                indent=2,
+                sort_keys=True,
+                separators=(",", ": "),
+            )
+            with self.subfile_writer("metadata.json") as outf:
                 outf.write(new_contents)
 
     @memoized_property
@@ -294,28 +324,30 @@ def _make_ext_reader(ext_bits, ext_mask):
         try:
             info = ext_bits[bit]
         except KeyError:
-            info = ext_bits['unknown'](bit)
+            info = ext_bits["unknown"](bit)
         infos.append(info)
 
     if len(infos) == 0:
         return (lambda f: [], lambda f, vs: None, {})
 
-    fmt = '<' + ''.join(info[1] for info in infos)
+    fmt = "<" + "".join(info[1] for info in infos)
     names = [info[0] for info in infos]
-    if '@' in fmt:
+    if "@" in fmt:
         # struct.unpack isn't general enough to do the job
         print(fmt, names, infos)
-        fmts = ['<' + info[1] for info in infos]
+        fmts = ["<" + info[1] for info in infos]
 
         def reader(f, fmts=fmts):
             values = [None] * len(fmts)
             for i, fmt in enumerate(fmts):
-                if fmt == '<@':
-                    nbytes, = struct.unpack('<I', f.read(4))
+                if fmt == "<@":
+                    (nbytes,) = struct.unpack("<I", f.read(4))
                     values[i] = f.read(nbytes)
                 else:
-                    values[i], = struct.unpack(fmt, f.read(4))
+                    (values[i],) = struct.unpack(fmt, f.read(4))
+
     else:
+
         def reader(f, fmt=fmt, nbytes=len(infos) * 4):
             values = list(struct.unpack(fmt, f.read(nbytes)))
             return values
@@ -345,22 +377,22 @@ def _make_cp_ext_reader(ext_mask, memo={}):
 
 class Sketch(object):
     """Stroke data from a .tilt file. Attributes:
-      .strokes    List of tilt.Stroke instances
-      .filename   Filename if loaded from file, but usually None
-      .header     Opaque header data"""
+    .strokes    List of tilt.Stroke instances
+    .filename   Filename if loaded from file, but usually None
+    .header     Opaque header data"""
 
     def __init__(self, source):
         """source is either a file name, a file-like instance, or a Tilt instance."""
         if isinstance(source, Tilt):
-            with source.subfile_reader('data.sketch') as inf:
+            with source.subfile_reader("data.sketch") as inf:
                 self.filename = None
                 self._parse(binfile(inf))
-        elif hasattr(source, 'read'):
+        elif hasattr(source, "read"):
             self.filename = None
             self._parse(binfile(source))
         else:
             self.filename = source
-            with file(source, 'rb') as inf:
+            with file(source, "rb") as inf:
                 self._parse(binfile(inf))
 
     def write(self, destination):
@@ -370,12 +402,12 @@ class Sketch(object):
         data = tmpf.getvalue()
 
         if isinstance(destination, Tilt):
-            with destination.subfile_writer('data.sketch') as outf:
+            with destination.subfile_writer("data.sketch") as outf:
                 outf.write(data)
-        elif hasattr(destination, 'write'):
+        elif hasattr(destination, "write"):
             destination.write(data)
         else:
-            with file(destination, 'wb') as outf:
+            with file(destination, "wb") as outf:
                 outf.write(data)
 
     def _parse(self, b):
@@ -459,8 +491,17 @@ class Stroke(object):
     def shallow_clone(self):
         """Clone everything but the control points themselves."""
         inst = self.__class__()
-        for attr in ('brush_idx', 'brush_color', 'brush_size', 'stroke_mask', 'cp_mask',
-                     'stroke_ext_writer', 'stroke_ext_lookup', 'cp_ext_writer', 'cp_ext_lookup'):
+        for attr in (
+            "brush_idx",
+            "brush_color",
+            "brush_size",
+            "stroke_mask",
+            "cp_mask",
+            "stroke_ext_writer",
+            "stroke_ext_lookup",
+            "cp_ext_writer",
+            "cp_ext_lookup",
+        ):
             setattr(inst, attr, getattr(self, attr))
         inst.extension = list(self.extension)
         inst.controlpoints = list(self.controlpoints)
@@ -471,12 +512,14 @@ class Stroke(object):
         (self.brush_idx,) = b.unpack("<i")
         self.brush_color = b.unpack("<4f")
         (self.brush_size, self.stroke_mask, self.cp_mask) = b.unpack("<fII")
-        stroke_ext_reader, self.stroke_ext_writer, self.stroke_ext_lookup = \
+        stroke_ext_reader, self.stroke_ext_writer, self.stroke_ext_lookup = (
             _make_stroke_ext_reader(self.stroke_mask)
+        )
         self.extension = stroke_ext_reader(b)
 
-        cp_ext_reader, self.cp_ext_writer, self.cp_ext_lookup = \
-            _make_cp_ext_reader(self.cp_mask)
+        cp_ext_reader, self.cp_ext_writer, self.cp_ext_lookup = _make_cp_ext_reader(
+            self.cp_mask
+        )
 
         (num_cp,) = b.unpack("<i")
         assert num_cp < 10000, num_cp
@@ -487,7 +530,7 @@ class Stroke(object):
 
     @memoized_property
     def controlpoints(self):
-        (cp_ext_reader, num_cp, raw_data) = self.__dict__.pop('_controlpoints')
+        (cp_ext_reader, num_cp, raw_data) = self.__dict__.pop("_controlpoints")
         b = binfile(StringIO(raw_data))
         return [ControlPoint.from_file(b, cp_ext_reader) for i in range(num_cp)]
 
@@ -513,18 +556,21 @@ class Stroke(object):
             self.extension[idx] = value
         else:
             # Convert from idx->value to name->value
-            name_to_value = dict((name, self.extension[idx])
-                                 for (name, idx) in self.stroke_ext_lookup.items())
+            name_to_value = dict(
+                (name, self.extension[idx])
+                for (name, idx) in self.stroke_ext_lookup.items()
+            )
             name_to_value[name] = value
 
             bit, exttype = STROKE_EXTENSION_BY_NAME[name]
             self.stroke_mask |= bit
-            _, self.stroke_ext_writer, self.stroke_ext_lookup = \
-                _make_stroke_ext_reader(self.stroke_mask)
+            _, self.stroke_ext_writer, self.stroke_ext_lookup = _make_stroke_ext_reader(
+                self.stroke_mask
+            )
 
             # Convert back to idx->value
             self.extension = [None] * len(self.stroke_ext_lookup)
-            for (name, idx) in self.stroke_ext_lookup.items():
+            for name, idx in self.stroke_ext_lookup.items():
                 self.extension[idx] = name_to_value[name]
 
     def delete_stroke_extension(self, name):
@@ -533,18 +579,21 @@ class Stroke(object):
         idx = self.stroke_ext_lookup[name]
 
         # Convert from idx->value to name->value
-        name_to_value = dict((name, self.extension[idx])
-                             for (name, idx) in self.stroke_ext_lookup.items())
+        name_to_value = dict(
+            (name, self.extension[idx])
+            for (name, idx) in self.stroke_ext_lookup.items()
+        )
         del name_to_value[name]
 
         bit, exttype = STROKE_EXTENSION_BY_NAME[name]
         self.stroke_mask &= ~bit
-        _, self.stroke_ext_writer, self.stroke_ext_lookup = \
-            _make_stroke_ext_reader(self.stroke_mask)
+        _, self.stroke_ext_writer, self.stroke_ext_lookup = _make_stroke_ext_reader(
+            self.stroke_mask
+        )
 
         # Convert back to idx->value
         self.extension = [None] * len(self.stroke_ext_lookup)
-        for (name, idx) in self.stroke_ext_lookup.items():
+        for name, idx in self.stroke_ext_lookup.items():
             self.extension[idx] = name_to_value[name]
 
     def has_cp_extension(self, name):
@@ -578,8 +627,8 @@ class Stroke(object):
 
 class ControlPoint(object):
     """Data for a single control point from a stroke. Attributes:
-      .position    Position as 3 floats. Units are decimeters.
-      .orientation Orientation of controller as a quaternion (x, y, z, w)."""
+    .position    Position as 3 floats. Units are decimeters.
+    .orientation Orientation of controller as a quaternion (x, y, z, w)."""
 
     @classmethod
     def from_file(cls, b, cp_ext_reader):
@@ -593,12 +642,12 @@ class ControlPoint(object):
 
     def clone(self):
         inst = self.__class__()
-        for attr in ('position', 'orientation', 'extension'):
+        for attr in ("position", "orientation", "extension"):
             setattr(inst, attr, list(getattr(self, attr)))
         return inst
 
     def _write(self, b, cp_ext_writer):
-        p = self.position;
+        p = self.position
         o = self.orientation
         b.pack("<7f", p[0], p[1], p[2], o[0], o[1], o[2], o[3])
         cp_ext_writer(b, self.extension)

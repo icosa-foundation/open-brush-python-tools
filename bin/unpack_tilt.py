@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 # Copyright 2016 Google Inc. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,8 +18,11 @@ import os
 import sys
 
 try:
-    sys.path.append(os.path.join(os.path.dirname(os.path.dirname(
-        os.path.abspath(__file__))), 'Python'))
+    sys.path.append(
+        os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Python"
+        )
+    )
     import openbrush.unpack
 except ImportError:
     print("Please put the 'Python' directory in your PYTHONPATH", file=sys.stderr)
@@ -39,12 +42,16 @@ def convert(in_name, compress):
 
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(
-        description="Converts .tilt files from packed format (zip) to unpacked format (directory), optionally applying compression.")
-    parser.add_argument('files', type=str, nargs='+',
-                        help="Files to convert to the other format")
-    parser.add_argument('--compress', action='store_true',
-                        help="Use compression (default: off)")
+        description="Converts .tilt files from packed format (zip) to unpacked format (directory), optionally applying compression."
+    )
+    parser.add_argument(
+        "files", type=str, nargs="+", help="Files to convert to the other format"
+    )
+    parser.add_argument(
+        "--compress", action="store_true", help="Use compression (default: off)"
+    )
     args = parser.parse_args()
     for arg in args.files:
         try:
@@ -53,5 +60,5 @@ def main():
             print("ERROR: %s" % e)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
