@@ -24,7 +24,7 @@ import struct
 from itertools import zip_longest
 from uuid import UUID
 
-SINGLE_SIDED_FLAT_BRUSH = set([
+SINGLE_SIDED_FLAT_BRUSH = {
     UUID("cb92b597-94ca-4255-b017-0e3f42f12f9e"),  # Fire
     UUID("cf019139-d41c-4eb0-a1d0-5cf54b0a42f3"),  # Highlighter
     UUID("e8ef32b1-baa8-460a-9c2c-9cf8506794f5"),  # Hypercolor
@@ -33,7 +33,7 @@ SINGLE_SIDED_FLAT_BRUSH = set([
     UUID("ad1ad437-76e2-450d-a23a-e17f8310b960"),  # Rainbow
     UUID("44bb800a-fbc3-4592-8426-94ecb05ddec3"),  # Streamers
     UUID("d229d335-c334-495a-a801-660ac8a87360"),  # Velvet Ink
-])
+}
 
 
 def _grouper(n, iterable, fillvalue=None):
@@ -44,7 +44,8 @@ def _grouper(n, iterable, fillvalue=None):
 
 def iter_meshes(filename):
     """Given a Tilt Brush .json export, yields TiltBrushMesh instances."""
-    obj = json.load(file(filename, 'rb'))
+    with open(filename, 'rb') as f:
+        obj = json.load(f)
     lookup = obj['brushes']
     for dct in lookup:
         dct['guid'] = UUID(dct['guid'])
@@ -165,7 +166,7 @@ class TiltBrushMesh(object):
         Put triangle indices into a canonical order, with lowest index first.
         *ignore* is a list of attribute names to ignore when comparing."""
         # Convert from SOA to AOS
-        compare = set(('n', 'uv0', 'uv1', 'c', 't'))
+        compare = {'n', 'uv0', 'uv1', 'c', 't'}
         if ignore is not None:
             compare -= set(ignore)
         compare = sorted(compare)

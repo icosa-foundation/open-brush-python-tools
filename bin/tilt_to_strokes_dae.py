@@ -130,7 +130,7 @@ class ColladaFile(object):
     def write(self, filename):
         header = '<?xml version="1.0" encoding="UTF-8"?>\n'
         _indent(self.root)
-        with file(filename, 'wb') as outf:
+        with open(filename, 'wb') as outf:
             outf.write(header)
             self.tree.write(outf)
 

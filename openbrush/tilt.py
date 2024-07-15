@@ -20,7 +20,7 @@ import math
 import os
 import struct
 import uuid
-from io import StringIO
+from io import BytesIO
 
 __all__ = ('Tilt', 'Sketch', 'Stroke', 'ControlPoint',
            'BadTilt', 'BadMetadata', 'MissingKey')
@@ -37,7 +37,7 @@ STROKE_EXTENSION_BITS = {
 }
 STROKE_EXTENSION_BY_NAME = dict(
     (info[0], (bit, info[1]))
-    for (bit, info) in STROKE_EXTENSION_BITS.items()
+    for (bit, info) in list(STROKE_EXTENSION_BITS.items())
     if bit != 'unknown'
 )
 
@@ -232,7 +232,7 @@ class Tilt(object):
     @contextlib.contextmanager
     def subfile_reader(self, subfile):
         if os.path.isdir(self.filename):
-            with file(os.path.join(self.filename, subfile), 'rb') as inf:
+            with open(os.path.join(self.filename, subfile), 'rb') as inf:
                 yield inf
         else:
             from zipfile import ZipFile
@@ -244,7 +244,7 @@ class Tilt(object):
     def subfile_writer(self, subfile):
         # Kind of a large hammer, but it works
         if os.path.isdir(self.filename):
-            with file(os.path.join(self.filename, subfile), 'wb') as outf:
+            with open(os.path.join(self.filename, subfile), 'wb') as outf:
                 yield outf
         else:
             with Tilt.as_directory(self.filename) as tilt2:
@@ -264,7 +264,7 @@ class Tilt(object):
             # Copy into self.metadata, preserving topmost reference
             for k in list(self.metadata.keys()):
                 del self.metadata[k]
-            for k, v in mutable_dct.items():
+            for k, v in list(mutable_dct.items()):
                 self.metadata[k] = copy.deepcopy(v)
 
             new_contents = json.dumps(
@@ -360,12 +360,12 @@ class Sketch(object):
             self._parse(binfile(source))
         else:
             self.filename = source
-            with file(source, 'rb') as inf:
+            with open(source, 'rb') as inf:
                 self._parse(binfile(inf))
 
     def write(self, destination):
         """destination is either a file name, a file-like instance, or a Tilt instance."""
-        tmpf = StringIO()
+        tmpf = BytesIO()
         self._write(binfile(tmpf))
         data = tmpf.getvalue()
 
@@ -375,7 +375,7 @@ class Sketch(object):
         elif hasattr(destination, 'write'):
             destination.write(data)
         else:
-            with file(destination, 'wb') as outf:
+            with open(destination, 'wb') as outf:
                 outf.write(data)
 
     def _parse(self, b):
@@ -488,7 +488,7 @@ class Stroke(object):
     @memoized_property
     def controlpoints(self):
         (cp_ext_reader, num_cp, raw_data) = self.__dict__.pop('_controlpoints')
-        b = binfile(StringIO(raw_data))
+        b = binfile(BytesIO(raw_data))
         return [ControlPoint.from_file(b, cp_ext_reader) for i in range(num_cp)]
 
     def has_stroke_extension(self, name):
@@ -514,7 +514,7 @@ class Stroke(object):
         else:
             # Convert from idx->value to name->value
             name_to_value = dict((name, self.extension[idx])
-                                 for (name, idx) in self.stroke_ext_lookup.items())
+                                 for (name, idx) in list(self.stroke_ext_lookup.items()))
             name_to_value[name] = value
 
             bit, exttype = STROKE_EXTENSION_BY_NAME[name]
@@ -524,7 +524,7 @@ class Stroke(object):
 
             # Convert back to idx->value
             self.extension = [None] * len(self.stroke_ext_lookup)
-            for (name, idx) in self.stroke_ext_lookup.items():
+            for (name, idx) in list(self.stroke_ext_lookup.items()):
                 self.extension[idx] = name_to_value[name]
 
     def delete_stroke_extension(self, name):
@@ -534,7 +534,7 @@ class Stroke(object):
 
         # Convert from idx->value to name->value
         name_to_value = dict((name, self.extension[idx])
-                             for (name, idx) in self.stroke_ext_lookup.items())
+                             for (name, idx) in list(self.stroke_ext_lookup.items()))
         del name_to_value[name]
 
         bit, exttype = STROKE_EXTENSION_BY_NAME[name]
@@ -544,7 +544,7 @@ class Stroke(object):
 
         # Convert back to idx->value
         self.extension = [None] * len(self.stroke_ext_lookup)
-        for (name, idx) in self.stroke_ext_lookup.items():
+        for (name, idx) in list(self.stroke_ext_lookup.items()):
             self.extension[idx] = name_to_value[name]
 
     def has_cp_extension(self, name):

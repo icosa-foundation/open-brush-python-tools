@@ -18,7 +18,8 @@ and vice versa. Applies sanity checks when packing."""
 import os
 import struct
 import zipfile
-from io import StringIO
+from io import BytesIO
+
 
 __all__ = ('ConversionError', 'convert_zip_to_dir', 'convert_dir_to_zip')
 
@@ -68,7 +69,7 @@ def _read_and_check_header(inf):
     except struct.error as e:
         raise ConversionError("Unexpected header error: %s" % (e,))
 
-    if sentinel != 'tilT':
+    if sentinel != b'tilT':
         raise ConversionError("Sentinel looks weird: %r" % sentinel)
 
     more = headerSize - len(base_bytes)
@@ -80,7 +81,7 @@ def _read_and_check_header(inf):
         raise ConversionError("Bad header size (claim %s, actual %s)" % (more, len(more_bytes)))
 
     zip_sentinel = inf.read(4)
-    if zip_sentinel != '' and zip_sentinel != 'PK\x03\x04':
+    if zip_sentinel != b'' and zip_sentinel != b'PK\x03\x04':
         raise ConversionError("Don't see zip sentinel after header: %r" % (zip_sentinel,))
 
     if headerVersion != 1:
@@ -90,7 +91,7 @@ def _read_and_check_header(inf):
 
 def convert_zip_to_dir(in_name):
     """Returns True if compression was used"""
-    with file(in_name, 'rb') as inf:
+    with open(in_name, 'rb') as inf:
         header_bytes = _read_and_check_header(inf)
 
     compression = False
@@ -106,7 +107,7 @@ def convert_zip_to_dir(in_name):
                 if member.compress_size != member.file_size:
                     compression = True
                 zf.extract(member, out_name)
-        with file(os.path.join(out_name, 'header.bin'), 'wb') as outf:
+        with open(os.path.join(out_name, 'header.bin'), 'wb') as outf:
             outf.write(header_bytes)
 
         tmp = in_name + '._prev'
@@ -136,7 +137,7 @@ def convert_dir_to_zip(in_name, compress):
     # Make sure metadata.json looks like valid utf-8 (rather than latin-1
     # or something else that will cause mojibake)
     try:
-        with file(os.path.join(in_name, 'metadata.json')) as inf:
+        with open(os.path.join(in_name, 'metadata.json')) as inf:
             import json
             json.load(inf)
     except IOError as e:
@@ -150,26 +151,27 @@ def convert_dir_to_zip(in_name, compress):
     try:
         header_bytes = None
 
-        zipf = StringIO()
+        zipf = BytesIO()
         with zipfile.ZipFile(zipf, 'a', compression, False) as zf:
             for (r, ds, fs) in os.walk(in_name):
                 fs.sort(key=by_standard_order)
                 for f in fs:
                     fullf = os.path.join(r, f)
                     if f == 'header.bin':
-                        header_bytes = file(fullf).read()
+                        with open(fullf, 'rb') as fullf_fp:
+                            header_bytes = fullf_fp.read()
                         continue
                     arcname = fullf[len(in_name) + 1:]
                     zf.write(fullf, arcname, compression)
 
         if header_bytes is None:
             print("Missing header; using default")
-            header_bytes = struct.pack(HEADER_V1_FMT, 'tilT', struct.calcsize(HEADER_V1_FMT), 1, 0, 0)
+            header_bytes = struct.pack(HEADER_V1_FMT, b'tilT', struct.calcsize(HEADER_V1_FMT), 1, 0, 0)
 
-        if not _read_and_check_header(StringIO(header_bytes)):
+        if not _read_and_check_header(BytesIO(header_bytes)):
             raise ConversionError("Invalid header.bin")
 
-        with file(out_name, 'wb') as outf:
+        with open(out_name, 'wb') as outf:
             outf.write(header_bytes)
             outf.write(zipf.getvalue())
 
