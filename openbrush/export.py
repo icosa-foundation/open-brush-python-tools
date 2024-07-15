@@ -1,11 +1,11 @@
 # Copyright 2016 Google Inc. All Rights Reserved.
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,16 +24,18 @@ import struct
 from itertools import zip_longest
 from uuid import UUID
 
-SINGLE_SIDED_FLAT_BRUSH = set([
-    UUID("cb92b597-94ca-4255-b017-0e3f42f12f9e"),  # Fire
-    UUID("cf019139-d41c-4eb0-a1d0-5cf54b0a42f3"),  # Highlighter
-    UUID("e8ef32b1-baa8-460a-9c2c-9cf8506794f5"),  # Hypercolor
-    UUID("2241cd32-8ba2-48a5-9ee7-2caef7e9ed62"),  # Light
-    UUID("c33714d1-b2f9-412e-bd50-1884c9d46336"),  # Plasma
-    UUID("ad1ad437-76e2-450d-a23a-e17f8310b960"),  # Rainbow
-    UUID("44bb800a-fbc3-4592-8426-94ecb05ddec3"),  # Streamers
-    UUID("d229d335-c334-495a-a801-660ac8a87360"),  # Velvet Ink
-])
+SINGLE_SIDED_FLAT_BRUSH = set(
+    [
+        UUID("cb92b597-94ca-4255-b017-0e3f42f12f9e"),  # Fire
+        UUID("cf019139-d41c-4eb0-a1d0-5cf54b0a42f3"),  # Highlighter
+        UUID("e8ef32b1-baa8-460a-9c2c-9cf8506794f5"),  # Hypercolor
+        UUID("2241cd32-8ba2-48a5-9ee7-2caef7e9ed62"),  # Light
+        UUID("c33714d1-b2f9-412e-bd50-1884c9d46336"),  # Plasma
+        UUID("ad1ad437-76e2-450d-a23a-e17f8310b960"),  # Rainbow
+        UUID("44bb800a-fbc3-4592-8426-94ecb05ddec3"),  # Streamers
+        UUID("d229d335-c334-495a-a801-660ac8a87360"),  # Velvet Ink
+    ]
+)
 
 
 def _grouper(n, iterable, fillvalue=None):
@@ -44,11 +46,11 @@ def _grouper(n, iterable, fillvalue=None):
 
 def iter_meshes(filename):
     """Given a Tilt Brush .json export, yields TiltBrushMesh instances."""
-    obj = json.load(file(filename, 'rb'))
-    lookup = obj['brushes']
+    obj = json.load(file(filename, "rb"))
+    lookup = obj["brushes"]
     for dct in lookup:
-        dct['guid'] = UUID(dct['guid'])
-    for json_stroke in obj['strokes']:
+        dct["guid"] = UUID(dct["guid"])
+    for json_stroke in obj["strokes"]:
         yield TiltBrushMesh._from_json(json_stroke, lookup)
 
 
@@ -67,14 +69,15 @@ class TiltBrushMesh(object):
 
       .tri        list of triangles (3-tuples of ints)
     """
+
     VERTEX_ATTRIBUTES = [
         # Attribute name, type code
-        ('v', 'f', None),
-        ('n', 'f', 3),
-        ('uv0', 'f', None),
-        ('uv1', 'f', None),
-        ('c', 'I', 1),
-        ('t', 'f', 4),
+        ("v", "f", None),
+        ("n", "f", 3),
+        ("uv0", "f", None),
+        ("uv1", "f", None),
+        ("c", "I", 1),
+        ("t", "f", 4),
     ]
 
     @classmethod
@@ -83,9 +86,9 @@ class TiltBrushMesh(object):
         empty = None
 
         stroke = TiltBrushMesh()
-        brush = brush_lookup[obj['brush']]
-        stroke.brush_name = brush['name']
-        stroke.brush_guid = UUID(str(brush['guid']))
+        brush = brush_lookup[obj["brush"]]
+        stroke.brush_name = brush["name"]
+        stroke.brush_guid = UUID(str(brush["guid"]))
 
         # Vertex attributes
         # If stroke is non-empty, 'v' is always present, and always comes first
@@ -98,11 +101,13 @@ class TiltBrushMesh(object):
                 else:
                     fmt = "<%d%c" % (len(data_bytes) / 4, typechar)
                     data_words = struct.unpack(fmt, data_bytes)
-                    if attr == 'v':
+                    if attr == "v":
                         num_verts = len(data_words) / 3
                     assert (len(data_words) % num_verts) == 0
                     stride_words = len(data_words) / num_verts
-                    assert (expected_stride is None) or (stride_words == expected_stride)
+                    assert (expected_stride is None) or (
+                        stride_words == expected_stride
+                    )
                     if stride_words > 1:
                         data_grouped = list(_grouper(stride_words, data_words))
                     else:
@@ -111,12 +116,14 @@ class TiltBrushMesh(object):
             else:
                 # For convenience, fill in with an empty array
                 if empty is None:
-                    empty = [None, ] * num_verts
+                    empty = [
+                        None,
+                    ] * num_verts
                 setattr(stroke, attr, empty)
 
         # Triangle indices. 'tri' might not exist, if empty
-        if 'tri' in obj:
-            data_bytes = base64.b64decode(obj['tri'])
+        if "tri" in obj:
+            data_bytes = base64.b64decode(obj["tri"])
             data_words = struct.unpack("<%dI" % (len(data_bytes) / 4), data_bytes)
             assert len(data_words) % 3 == 0
             stroke.tri = list(_grouper(3, data_words))
@@ -150,8 +157,9 @@ class TiltBrushMesh(object):
             dest.uv1.extend(stroke.uv1)
             dest.c.extend(stroke.c)
             dest.t.extend(stroke.t)
-            dest.tri.extend([(t[0] + offset, t[1] + offset, t[2] + offset)
-                             for t in stroke.tri])
+            dest.tri.extend(
+                [(t[0] + offset, t[1] + offset, t[2] + offset) for t in stroke.tri]
+            )
         return dest
 
     def __init__(self):
@@ -165,11 +173,11 @@ class TiltBrushMesh(object):
         Put triangle indices into a canonical order, with lowest index first.
         *ignore* is a list of attribute names to ignore when comparing."""
         # Convert from SOA to AOS
-        compare = set(('n', 'uv0', 'uv1', 'c', 't'))
+        compare = set(("n", "uv0", "uv1", "c", "t"))
         if ignore is not None:
             compare -= set(ignore)
         compare = sorted(compare)
-        compare.insert(0, 'v')
+        compare.insert(0, "v")
 
         struct_of_arrays = []
         for attr_name in sorted(compare):
@@ -221,7 +229,8 @@ class TiltBrushMesh(object):
         num_verts = len(self.v)
 
         def flip_vec3(val):
-            if val is None: return None
+            if val is None:
+                return None
             return (-val[0], -val[1], -val[2])
 
         # Duplicate vert data, flipping normals
@@ -235,9 +244,9 @@ class TiltBrushMesh(object):
 
         more_tris = []
         for tri in self.tri:
-            more_tris.append((num_verts + tri[0],
-                              num_verts + tri[2],
-                              num_verts + tri[1]))
+            more_tris.append(
+                (num_verts + tri[0], num_verts + tri[2], num_verts + tri[1])
+            )
         self.tri += more_tris
 
     def remove_backfaces(self):
@@ -277,11 +286,14 @@ class TiltBrushMesh(object):
             self.v[i] = (v[0] - a0, v[1] - a1, v[2] - a2)
 
     def dump(self, verbose=False):
-        print("  Brush: %s, %d verts, %d tris" % (self.brush_guid, len(self.v), len(self.tri) / 3))
+        print(
+            "  Brush: %s, %d verts, %d tris"
+            % (self.brush_guid, len(self.v), len(self.tri) / 3)
+        )
         if verbose:
-            print('  v')
+            print("  v")
             for v in self.v:
-                print('  ', v)
-            print('  t')
+                print("  ", v)
+            print("  t")
             for t in self.tri:
-                print('  ', t)
+                print("  ", t)
